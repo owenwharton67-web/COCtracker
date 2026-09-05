@@ -2,6 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { relativeTime } from "@/lib/format-time";
 import { ProgressRing } from "@/components/progress-ring";
+import { TownHallBadge } from "@/components/town-hall-badge";
+import { CategoryIcon } from "@/components/category-icon";
+import { computeBaseHealth } from "@/lib/optimizer/health";
 import {
   cardClasses,
   cardHeaderClasses,
@@ -56,15 +59,18 @@ export default async function OverviewPage() {
   const overallPercent =
     buildingsPercent != null ? (unitsPercent + buildingsPercent) / 2 : unitsPercent;
 
+  const health = await computeBaseHealth();
+
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-baseline justify-between flex-wrap gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-4">
+          <TownHallBadge level={latest.townHallLevel} weaponLevel={latest.townHallWeaponLevel} />
           <h1 className={pageHeaderTitleClasses}>
             {latest.name} <span className="text-faint font-normal">{latest.tag}</span>
           </h1>
-          <SyncBadge ok={lastSync?.success ?? false} at={latest.fetchedAt} />
         </div>
+        <SyncBadge ok={lastSync?.success ?? false} at={latest.fetchedAt} />
       </div>
 
       <div className={cardClasses}>
@@ -87,6 +93,8 @@ export default async function OverviewPage() {
           )}
         </div>
       </div>
+
+      {health && <BaseHealthCard health={health} />}
 
       {lastSync && !lastSync.success && (
         <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger flex items-center justify-between gap-4">
@@ -166,8 +174,11 @@ export default async function OverviewPage() {
           </p>
           <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1">
             {equipment.map((eq) => (
-              <div key={eq.name} className="flex items-center justify-between py-1.5 border-b border-border last:border-0 text-sm">
-                <span className="text-text">{eq.name}</span>
+              <div key={eq.name} className="flex items-center gap-2 justify-between py-1.5 border-b border-border last:border-0 text-sm">
+                <span className="flex items-center gap-2 text-text">
+                  <CategoryIcon kind="HERO_EQUIPMENT" className="h-3.5 w-3.5 text-faint shrink-0" />
+                  {eq.name}
+                </span>
                 <span className={eq.level >= eq.maxLevel ? badgeClasses("success") : badgeClasses("neutral")}>
                   Lv{eq.level}/{eq.maxLevel}
                 </span>
@@ -175,6 +186,54 @@ export default async function OverviewPage() {
             ))}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function BaseHealthCard({ health }: { health: Awaited<ReturnType<typeof computeBaseHealth>> }) {
+  if (!health) return null;
+  return (
+    <div className={cardClasses}>
+      <h2 className={cardHeaderClasses}>Base health</h2>
+      <p className="text-sm text-muted mb-4">
+        How far each part of your base lags behind what&apos;s currently possible, weighted by total levels (not
+        just item count) so a big gap stands out more than a small one.
+      </p>
+
+      <div className="space-y-2.5 mb-5">
+        {health.categories.map((cat) => (
+          <div key={cat.key} className="flex items-center gap-3">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-2 text-muted">
+              <CategoryIcon kind={cat.key} className="h-3.5 w-3.5" />
+            </span>
+            <span className="w-36 shrink-0 text-xs text-muted truncate">{cat.label}</span>
+            <div className="flex-1 h-2 rounded-full bg-surface-2 overflow-hidden">
+              <div
+                className={"h-full rounded-full " + (cat.percent < 60 ? "bg-danger" : cat.percent < 85 ? "bg-accent" : "bg-success")}
+                style={{ width: `${Math.max(2, Math.min(100, cat.percent))}%` }}
+              />
+            </div>
+            <span className="w-12 shrink-0 text-right text-xs font-medium text-text">{Math.round(cat.percent)}%</span>
+          </div>
+        ))}
+      </div>
+
+      {health.weakPoints.length > 0 && (
+        <>
+          <div className={sectionLabelClasses + " mb-2"}>Most underleveled right now</div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {health.weakPoints.map((w, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm">
+                <CategoryIcon kind={w.itemType} className="h-4 w-4 text-faint shrink-0" />
+                <span className="text-text truncate flex-1">{w.name}</span>
+                <span className="text-xs text-faint shrink-0">
+                  Lv{w.level}/{w.cap}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

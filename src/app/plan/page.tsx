@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import type { UpgradeCandidate } from "@/lib/optimizer/types";
 import type { TimeToMaxEstimate } from "@/lib/optimizer/eta";
+import { CategoryIcon } from "@/components/category-icon";
 
 export const dynamic = "force-dynamic";
 
@@ -199,11 +200,16 @@ function Section({
           {candidates.map((c, i) => (
             <li key={i} className={cardClasses + " !p-4"}>
               <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-                <div>
-                  <div className="text-sm font-medium text-text">
-                    {c.itemName} <span className="text-faint font-normal">Lv{c.fromLevel}&rarr;{c.toLevel}</span>
+                <div className="flex items-start gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted mt-0.5">
+                    <CategoryIcon kind={c.itemType} className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <div className="text-sm font-medium text-text">
+                      {c.itemName} <span className="text-faint font-normal">Lv{c.fromLevel}&rarr;{c.toLevel}</span>
+                    </div>
+                    <div className="text-xs text-faint mt-0.5">{c.reasons.join(" · ")}</div>
                   </div>
-                  <div className="text-xs text-faint mt-0.5">{c.reasons.join(" · ")}</div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={currencyBadgeClasses[c.currency] ? `${currencyBadgeClasses[c.currency]} rounded-full px-2.5 py-1 text-xs font-medium` : badgeClasses()}>
