@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { relativeTime } from "@/lib/format-time";
 import { ProgressRing } from "@/components/progress-ring";
+import { Sparkline } from "@/components/sparkline";
 import { TownHallBadge } from "@/components/town-hall-badge";
 import { CategoryIcon } from "@/components/category-icon";
 import { computeBaseHealth } from "@/lib/optimizer/health";
@@ -21,13 +22,19 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage() {
-  const [latest, lastSync, allUnits, buildings, resources] = await Promise.all([
+  const [latest, lastSync, allUnits, buildings, resources, history] = await Promise.all([
     prisma.playerSnapshot.findFirst({ orderBy: { fetchedAt: "desc" } }),
     prisma.syncLog.findFirst({ orderBy: { ranAt: "desc" } }),
     prisma.unitLevel.findMany({ where: { village: "home" } }),
     prisma.buildingInstance.findMany({ where: { village: "home" } }),
     prisma.resourceState.findUnique({ where: { id: 1 } }),
+    prisma.playerSnapshot.findMany({
+      orderBy: { fetchedAt: "desc" },
+      take: 100,
+      select: { trophies: true, warStars: true, clanCapitalContributions: true },
+    }),
   ]);
+  const chronological = [...history].reverse();
   const buildingCount = buildings.length;
 
   if (!latest) {
@@ -93,6 +100,26 @@ export default async function OverviewPage() {
           )}
         </div>
       </div>
+
+      {chronological.length >= 2 && (
+        <div className="grid sm:grid-cols-3 gap-3">
+          <Sparkline
+            label="Trophies"
+            currentLabel={String(latest.trophies)}
+            values={chronological.map((h) => h.trophies)}
+          />
+          <Sparkline
+            label="War stars"
+            currentLabel={String(latest.warStars)}
+            values={chronological.map((h) => h.warStars)}
+          />
+          <Sparkline
+            label="Capital contributions"
+            currentLabel={latest.clanCapitalContributions.toLocaleString()}
+            values={chronological.map((h) => h.clanCapitalContributions)}
+          />
+        </div>
+      )}
 
       {health && <BaseHealthCard health={health} />}
 
