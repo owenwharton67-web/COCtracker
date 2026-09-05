@@ -111,12 +111,18 @@ constraint on how you can run the 3-minute sync job. Three real options:
    `npm run poll` as a long-lived process (systemd, pm2, a tmux session)
    or point an external scheduler at `/api/cron/sync`. Simplest to reason
    about; the app's default SQLite setup is built for exactly this.
-2. **Use a static-IP outbound proxy in front of the CoC API** (e.g. the
-   community-run RoyaleAPI proxy at `https://cocproxy.royaleapi.dev/v1`,
-   which exists specifically to solve this problem for dynamic-IP hosts
-   like Vercel/Lambda). Set `COC_API_BASE_URL` in `.env` to the proxy URL
-   and whitelist the proxy's published IPs instead of your own. Check the
-   proxy's current terms/rate limits before relying on it.
+2. **Use a static-IP outbound proxy in front of the CoC API** - the
+   community-run RoyaleAPI proxy, which exists specifically to solve this
+   problem for dynamic-IP hosts like Vercel/Railway. Whitelist its published
+   IP (`45.79.218.79` as of writing - reconfirm at
+   [docs.royaleapi.com](https://docs.royaleapi.com), since it can change) on
+   your CoC API token instead of your own, and set in `.env`:
+   ```
+   COC_API_BASE_URL="https://proxy.royaleapi.dev/v1"
+   ```
+   Requests then go to `proxy.royaleapi.dev`, which forwards them to
+   Supercell's real API from that whitelisted IP. Check the proxy's current
+   terms/rate limits before relying on it for anything beyond personal use.
 3. **Deploy to a platform with a fixed outbound IP add-on** (several
    serverless hosts sell this) and whitelist that.
 
@@ -127,6 +133,27 @@ continuously, or an external scheduler (cron-job.org, a GitHub Actions
 scheduled workflow running on a self-hosted runner at the right IP, a
 systemd timer) hitting the route. Protect the route with `CRON_SECRET` in
 `.env` either way (sent as `Authorization: Bearer <secret>` or `?secret=`).
+
+### Deploying to Railway
+
+Railway (combined with the RoyaleAPI proxy above) is the easiest "deploy
+and forget" option, since it can run `scripts/poll.ts` as an always-on
+background process - no external scheduler needed.
+
+1. New Project → Deploy from GitHub repo → this repo.
+2. **Add a volume**: Settings → Volumes → new volume, mount path `/data`.
+   SQLite's file needs to live outside the container's own filesystem or
+   it's wiped on every redeploy.
+3. **Set variables** (Variables tab): `COC_API_TOKEN`, `COC_PLAYER_TAG`,
+   `COC_API_BASE_URL` (the proxy URL above, if using it),
+   `DATABASE_URL=file:/data/dev.db` (note the volume path, not `./dev.db`),
+   `CRON_SECRET` (any random string).
+4. Once it deploys successfully: Settings → Networking → **Generate
+   Domain**. That's your app's URL.
+5. **Add a second service** in the same project, same repo, but override
+   its start command to `npm run poll` - this is the 3-minute sync loop.
+   Give it the same variables (Railway can share/reference variables
+   across services in a project).
 
 The Sync status page (`/sync`) logs every attempt, success or failure,
 specifically so a `403` from a wrong IP shows up immediately instead of

@@ -16,8 +16,8 @@ export class CocApiError extends Error {
 }
 
 function baseUrl(): string {
-  // Override with the RoyaleAPI proxy (https://cocproxy.royaleapi.dev/v1)
-  // if you're running the sync job somewhere without a fixed IP - see
+  // Override with the RoyaleAPI proxy (https://proxy.royaleapi.dev/v1) if
+  // you're running the sync job somewhere without a fixed IP - see
   // README.md "Deployment and the IP whitelist problem".
   return process.env.COC_API_BASE_URL?.trim() || "https://api.clashofclans.com/v1";
 }
