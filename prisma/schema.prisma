@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// One row per sync (every ~3 minutes). This is everything the official
+// Clash of Clans API exposes about the player account - see README for what
+// is and isn't available through the API.
+model PlayerSnapshot {
+  id                       Int      @id @default(autoincrement())
+  fetchedAt                DateTime @default(now())
+  tag                      String
+  name                     String
+  townHallLevel            Int
+  townHallWeaponLevel      Int?
+  expLevel                 Int
+  trophies                 Int
+  bestTrophies             Int
+  warStars                 Int
+  attackWins               Int
+  defenseWins              Int
+  builderHallLevel         Int?
+  builderBaseTrophies      Int?
+  bestBuilderBaseTrophies  Int?
+  donations                Int
+  donationsReceived        Int
+  clanCapitalContributions Int
+  leagueName               String?
+  builderBaseLeagueName    String?
+  clanTag                  String?
+  clanName                 String?
+  clanRole                 String?
+  warPreference            String?
+  legendLeagueRank         Int?
+  raw                      String // full raw JSON payload, kept for anything not modeled above
+
+  @@index([fetchedAt])
+}
+
+// Latest known level of every unlocked hero / troop / spell / hero equipment
+// / pet / siege machine, upserted on every sync. maxLevel comes straight from
+// the API and already reflects the cap for the account's current
+// Town Hall/Barracks/Lab/etc, so "level < maxLevel" is all that's needed to
+// know something can still be upgraded.
+model UnitLevel {
+  id        Int      @id @default(autoincrement())
+  name      String
+  category  String // HERO | HERO_EQUIPMENT | TROOP | SIEGE_MACHINE | SPELL | PET
+  village   String // home | builderBase
+  level     Int
+  maxLevel  Int
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, village])
+}
+
+// The API exposes NO per-building data at all (not even Town Hall internals
+// beyond its level/weapon level) - defenses, resource buildings, army
+// buildings, traps and walls have to be entered by hand. Grouped by
+// (type, level) rather than one row per physical building, since only the
+// count-at-each-level matters for planning.
+model BuildingInstance {
+  id           Int      @id @default(autoincrement())
+  buildingType String
+  level        Int
+  count        Int
+  // Max level available for this building at the account's CURRENT Town
+  // Hall, exactly as shown in-game on the building's upgrade button
+  // ("Lvl X/Y" or "MAX"). Left null until the user fills it in - Supercell
+  // changes these with balance patches often enough that a static table
+  // baked into this app would go stale, so this app never guesses it.
+  capLevel     Int?
+  village      String   @default("home") // home | builderBase
+  updatedAt    DateTime @updatedAt
+
+  @@unique([buildingType, level, village])
+}
+
+// Resources currently sitting in storage. Not exposed by the API - entered
+// manually (or nudged by the sync job's income estimate between updates).
+model ResourceState {
+  id                Int      @id @default(1)
+  gold              Int      @default(0)
+  elixir            Int      @default(0)
+  darkElixir        Int      @default(0)
+  shinyOre          Int      @default(0)
+  glowyOre          Int      @default(0)
+  starryOre         Int      @default(0)
+  gems              Int      @default(0)
+  buildersAvailable Int      @default(5)
+  builderTotalCount Int      @default(5)
+  labBusy           Boolean  @default(false)
+  petHouseBusy      Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+}
+
+// Magic item inventory (Books, Runes, Hammers, potions, ...). Not exposed by
+// the API - entered manually. itemKey matches src/data/magic-items.ts.
+model MagicItem {
+  id        Int      @id @default(autoincrement())
+  itemKey   String   @unique
+  quantity  Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+// Gold Pass status/tier. Not exposed by the API - entered manually.
+model GoldPassState {
+  id           Int       @id @default(1)
+  active       Boolean   @default(false)
+  seasonName   String?
+  tier         Int       @default(0)
+  purchased    Boolean   @default(false)
+  seasonEndsAt DateTime?
+  updatedAt    DateTime  @updatedAt
+}
+
+// A personal log of upgrades actually queued/completed in-game. Optional,
+// but recommended: logging the real cost/time the game showed you lets the
+// optimizer use your account's real numbers for buildings instead of the
+// heuristic fallback (see src/lib/optimizer/README for why buildings can't
+// be priced exactly from static data alone).
+model UpgradeLog {
+  id              Int       @id @default(autoincrement())
+  itemType        String // BUILDING | WALL | TROOP | SPELL | HERO | HERO_EQUIPMENT | PET
+  itemName        String
+  fromLevel       Int
+  toLevel         Int
+  goldCost        Int?
+  elixirCost      Int?
+  darkElixirCost  Int?
+  oreCost         Int?
+  oreType         String? // shiny | glowy | starry
+  durationMinutes Int?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  usedMagicItem   String? // itemKey of whatever finished/skipped it, if any
+  createdAt       DateTime  @default(now())
+}
+
+// One row per sync attempt, success or failure - makes IP-whitelist/token
+// problems visible in the UI instead of failing silently in a cron log.
+model SyncLog {
+  id         Int      @id @default(autoincrement())
+  ranAt      DateTime @default(now())
+  success    Boolean
+  statusCode Int?
+  message    String?
+}
