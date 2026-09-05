@@ -40,6 +40,16 @@ Resources & items and Buildings pages, whenever it drifts from reality.
 It's not real-time for that half of the picture, but it doesn't need to be
 - building levels change on the order of hours to days, not minutes.
 
+**Building levels specifically have a much faster path**, though: Clash of
+Clans has its own in-game village-export JSON feature, and it includes a
+level and count for every building and trap. Paste that directly into
+`/data/import` - it's auto-detected and handled differently from this
+app's own format. The only catch is that Supercell's internal numeric IDs
+in that export have no verified public name mapping, so the first time an
+ID shows up you name it once (you're looking at your own base - you know
+what it is); every export after that applies automatically, forever, since
+those IDs don't change. See `src/lib/game-export.ts`.
+
 ## The upgrade plan's honesty policy
 
 Exact per-level upgrade costs for every troop/spell/hero/building at every

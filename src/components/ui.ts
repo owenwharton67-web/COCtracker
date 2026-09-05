@@ -12,16 +12,22 @@ export const inputClasses =
 
 export const selectClasses = inputClasses + " appearance-none";
 
+// Consistent keyboard-focus ring, offset against the dark page background,
+// applied to every clickable primitive below. Exported for custom-styled
+// links/tabs elsewhere (sidebar nav, plan filter tabs) to reuse.
+export const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
+
 export const buttonClasses =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent text-on-accent px-4 py-2 text-sm font-semibold hover:bg-accent-strong disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+  `inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent text-on-accent px-4 py-2 text-sm font-semibold hover:bg-accent-strong disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${focusRing}`;
 
 export const secondaryButtonClasses =
-  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-border-strong bg-surface-2 text-text px-4 py-2 text-sm font-medium hover:bg-surface-hover transition-colors";
+  `inline-flex items-center justify-center gap-1.5 rounded-lg border border-border-strong bg-surface-2 text-text px-4 py-2 text-sm font-medium hover:bg-surface-hover transition-colors ${focusRing}`;
 
 export const ghostButtonClasses =
-  "inline-flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted hover:text-text hover:bg-surface-hover transition-colors";
+  `inline-flex items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted hover:text-text hover:bg-surface-hover transition-colors ${focusRing}`;
 
-export const dangerLinkClasses = "text-xs font-medium text-danger hover:underline";
+export const dangerLinkClasses = `text-xs font-medium text-danger hover:underline rounded ${focusRing}`;
 
 export const labelClasses = "block text-xs font-medium text-muted mb-1.5";
 

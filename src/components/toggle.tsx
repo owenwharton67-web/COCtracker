@@ -20,7 +20,7 @@ export function Toggle({
       </span>
       <span className="relative inline-flex shrink-0 mt-0.5">
         <input type="checkbox" name={name} defaultChecked={defaultChecked} className="peer sr-only" />
-        <span className="h-6 w-11 rounded-full bg-surface-2 border border-border-strong transition-colors peer-checked:bg-accent peer-checked:border-accent" />
+        <span className="h-6 w-11 rounded-full bg-surface-2 border border-border-strong transition-colors peer-checked:bg-accent peer-checked:border-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-bg" />
         <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-faint transition-all peer-checked:translate-x-5 peer-checked:bg-on-accent" />
       </span>
     </label>

@@ -28,6 +28,12 @@ export default async function ImportPage() {
           rows are matched by (type, level), so importing again with an updated count/capLevel just corrects
           that row rather than duplicating it.
         </p>
+        <p className={cardSubtextClasses + " mb-3"}>
+          You can also paste Clash of Clans&apos; own in-game village-export JSON directly - it&apos;s detected
+          automatically and applies building/trap levels straight from it. The first time it sees a building type
+          it doesn&apos;t recognize, it&apos;ll ask you to name it once; every export after that applies
+          automatically.
+        </p>
         <ImportForm />
       </div>
 

@@ -12,6 +12,7 @@ import {
   statTileValueClasses,
   sectionLabelClasses,
   pageHeaderTitleClasses,
+  focusRing,
 } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -200,7 +201,7 @@ function StatTile({ label, value, sub }: { label: string; value: string; sub?: s
 
 function SummaryCard({ title, value, href, cta }: { title: string; value: string; href: string; cta: string }) {
   return (
-    <Link href={href} className={cardClasses + " block hover:border-border-strong transition-colors"}>
+    <Link href={href} className={cardClasses + ` block hover:border-border-strong transition-colors ${focusRing}`}>
       <h2 className="text-sm font-medium text-muted">{title}</h2>
       <p className="mt-1 mb-3 text-text font-medium">{value}</p>
       <span className="text-sm text-accent">{cta} &rarr;</span>

@@ -150,3 +150,15 @@ model SyncLog {
   statusCode Int?
   message    String?
 }
+
+// Learned mapping from Clash of Clans' internal numeric "data" IDs (used in
+// the game's own village-export JSON) to a human building/trap name. There's
+// no verified public source for this mapping, so it's built up from the
+// user naming an ID once the first time it's seen - see
+// src/lib/game-export.ts. IDs are permanent for existing content, so a name
+// learned once applies to every future export forever.
+model DataIdMapping {
+  dataId   Int    @id
+  name     String
+  category String // BUILDING | TRAP
+}

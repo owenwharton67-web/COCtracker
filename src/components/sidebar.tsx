@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { focusRing } from "@/components/ui";
 
 interface NavItem {
   href: string;
@@ -61,7 +62,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     <Link
       href={item.href}
       className={
-        "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors " +
+        `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${focusRing} ` +
         (active ? "bg-accent-soft text-accent-strong font-medium" : "text-muted hover:text-text hover:bg-surface-hover")
       }
     >
@@ -114,7 +115,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={
-                "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition-colors " +
+                `flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition-colors ${focusRing} ` +
                 (pathname === item.href ? "bg-accent-soft text-accent-strong font-medium" : "text-muted hover:text-text")
               }
             >

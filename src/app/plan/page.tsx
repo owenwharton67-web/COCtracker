@@ -10,6 +10,7 @@ import {
   pageHeaderTitleClasses,
   pageHeaderSubtextClasses,
   sectionLabelClasses,
+  focusRing,
 } from "@/components/ui";
 import type { UpgradeCandidate } from "@/lib/optimizer/types";
 import type { TimeToMaxEstimate } from "@/lib/optimizer/eta";
@@ -72,7 +73,7 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
             key={tab.key}
             href={tab.key === "ALL" ? "/plan" : `/plan?tab=${tab.key}`}
             className={
-              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors " +
+              `rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${focusRing} ` +
               (activeTab === tab.key ? "bg-accent text-on-accent" : "text-muted hover:text-text hover:bg-surface-hover")
             }
           >
