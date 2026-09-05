@@ -118,11 +118,18 @@ constraint on how you can run the 3-minute sync job. Three real options:
    [docs.royaleapi.com](https://docs.royaleapi.com), since it can change) on
    your CoC API token instead of your own, and set in `.env`:
    ```
-   COC_API_BASE_URL="https://proxy.royaleapi.dev/v1"
+   COC_API_BASE_URL="https://cocproxy.royaleapi.dev/v1"
    ```
-   Requests then go to `proxy.royaleapi.dev`, which forwards them to
-   Supercell's real API from that whitelisted IP. Check the proxy's current
-   terms/rate limits before relying on it for anything beyond personal use.
+   **Important:** RoyaleAPI runs a separate proxy hostname per game -
+   `proxy.royaleapi.dev` (no prefix) is Clash **Royale**;
+   `cocproxy.royaleapi.dev` is Clash of Clans. Using the Royale one with a
+   Clash of Clans key fails with `accessDenied.invalidScope`, which looks
+   nothing like an IP problem and can easily be mistaken for one - confirm
+   the exact current hostname for Clash of Clans specifically on
+   [docs.royaleapi.com](https://docs.royaleapi.com) before trusting this.
+   Requests then get forwarded to Supercell's real API from that
+   whitelisted IP. Check the proxy's current terms/rate limits before
+   relying on it for anything beyond personal use.
 3. **Deploy to a platform with a fixed outbound IP add-on** (several
    serverless hosts sell this) and whitelist that.
 

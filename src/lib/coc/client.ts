@@ -16,9 +16,12 @@ export class CocApiError extends Error {
 }
 
 function baseUrl(): string {
-  // Override with the RoyaleAPI proxy (https://proxy.royaleapi.dev/v1) if
-  // you're running the sync job somewhere without a fixed IP - see
-  // README.md "Deployment and the IP whitelist problem".
+  // Override with the RoyaleAPI proxy (https://cocproxy.royaleapi.dev/v1)
+  // if you're running the sync job somewhere without a fixed IP - see
+  // README.md "Deployment and the IP whitelist problem". Note this is a
+  // DIFFERENT hostname than RoyaleAPI's Clash Royale proxy
+  // (proxy.royaleapi.dev, no "coc" prefix) - using the wrong one forwards
+  // to the wrong game's API and fails with a scope error, not an IP error.
   return process.env.COC_API_BASE_URL?.trim() || "https://api.clashofclans.com/v1";
 }
 
