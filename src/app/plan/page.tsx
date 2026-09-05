@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buildUpgradePlan } from "@/lib/optimizer/engine";
 import { estimateTimeToMax } from "@/lib/optimizer/eta";
+import { getNextTownHall } from "@/lib/optimizer/next-townhall";
 import {
   cardClasses,
   cardHeaderClasses,
@@ -44,7 +45,7 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
   const rawTab = Array.isArray(params.tab) ? params.tab[0] : params.tab;
   const activeTab: TabKey = TABS.some((t) => t.key === rawTab) ? (rawTab as TabKey) : "ALL";
 
-  const [plan, eta] = await Promise.all([buildUpgradePlan(), estimateTimeToMax()]);
+  const [plan, eta, nextTH] = await Promise.all([buildUpgradePlan(), estimateTimeToMax(), getNextTownHall()]);
   const affordableNow = plan.affordableNow.filter((c) => matchesTab(c, activeTab));
   const queuedNext = plan.queuedNext.filter((c) => matchesTab(c, activeTab));
 
@@ -63,6 +64,7 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
       </div>
 
       {eta && eta.overallDays > 0 && <EtaCard eta={eta} />}
+      {nextTH && <NextTownHallCard nextTH={nextTH} />}
 
       <div className="flex flex-wrap gap-3">
         <MiniStat label="Builders free" value={`${plan.summary.buildersFree}/${plan.summary.buildersTotal}`} />
@@ -129,6 +131,30 @@ const BOTTLENECK_LABEL: Record<TimeToMaxEstimate["bottleneck"], string> = {
   HERO: "your slowest hero",
   NONE: "nothing",
 };
+
+function NextTownHallCard({ nextTH }: { nextTH: NonNullable<Awaited<ReturnType<typeof getNextTownHall>>> }) {
+  return (
+    <div className={cardClasses}>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <div className={sectionLabelClasses}>Next Town Hall - TH{nextTH.fromLevel} &rarr; TH{nextTH.toLevel}</div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-lg font-semibold text-text">
+              {nextTH.amount > 0 ? `${nextTH.amount.toLocaleString()} ${CURRENCY_LABEL[nextTH.currency] ?? nextTH.currency}` : "Not covered yet"}
+            </span>
+            {nextTH.minutes > 0 && <span className="text-sm text-muted">{formatMinutes(nextTH.minutes)} build time</span>}
+            {nextTH.costSource === "gamedata" && <span className="text-xs text-ore">verified</span>}
+            {nextTH.costSource === "estimate" && <span className="text-xs text-faint">approx.</span>}
+          </div>
+        </div>
+        <p className="text-xs text-faint max-w-xs">
+          Informational only - not pushed as a recommendation. Most experienced players max their current Town
+          Hall first; pushing early leaves you with a higher TH than your defenses/army can back up.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function EtaCard({ eta }: { eta: TimeToMaxEstimate }) {
   const bottleneckDetail =
