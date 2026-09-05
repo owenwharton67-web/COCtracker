@@ -5,12 +5,12 @@ import {
   cardHeaderClasses,
   inputClasses,
   labelClasses,
-  buttonClasses,
   pageHeaderTitleClasses,
   pageHeaderSubtextClasses,
   dividerClasses,
 } from "@/components/ui";
 import { Toggle } from "@/components/toggle";
+import { ActionForm } from "@/components/action-form";
 import { updateResourcesAction, updateMagicItemsAction, updateGoldPassAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -43,8 +43,8 @@ export default async function ResourcesPage() {
         </p>
       </div>
 
-      <form action={updateResourcesAction} className={cardClasses + " space-y-4"}>
-        <h2 className={cardHeaderClasses}>Resources on hand</h2>
+      <ActionForm action={updateResourcesAction} buttonLabel="Save resources" className={cardClasses}>
+        <h2 className={cardHeaderClasses + " mb-3"}>Resources on hand</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <Field label="Gold" name="gold" defaultValue={resources?.gold} />
           <Field label="Elixir" name="elixir" defaultValue={resources?.elixir} />
@@ -60,7 +60,7 @@ export default async function ResourcesPage() {
             defaultValue={resources?.builderTotalCount ?? 5}
           />
         </div>
-        <div className={dividerClasses + " pt-1"}>
+        <div className={dividerClasses + " pt-1 mt-4"}>
           <div className="grid sm:grid-cols-2 gap-x-6 pt-3">
             <Toggle name="labBusy" label="Laboratory busy" description="Currently researching something" defaultChecked={resources?.labBusy} />
             <Toggle
@@ -71,13 +71,10 @@ export default async function ResourcesPage() {
             />
           </div>
         </div>
-        <button type="submit" className={buttonClasses}>
-          Save resources
-        </button>
-      </form>
+      </ActionForm>
 
-      <form action={updateMagicItemsAction} className={cardClasses + " space-y-4"}>
-        <h2 className={cardHeaderClasses}>Magic item inventory</h2>
+      <ActionForm action={updateMagicItemsAction} buttonLabel="Save inventory" className={cardClasses}>
+        <h2 className={cardHeaderClasses + " mb-3"}>Magic item inventory</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {MAGIC_ITEMS.map((item) => (
             <div key={item.key}>
@@ -94,13 +91,10 @@ export default async function ResourcesPage() {
             </div>
           ))}
         </div>
-        <button type="submit" className={buttonClasses}>
-          Save inventory
-        </button>
-      </form>
+      </ActionForm>
 
-      <form action={updateGoldPassAction} className={cardClasses + " space-y-4"}>
-        <h2 className={cardHeaderClasses}>Gold Pass</h2>
+      <ActionForm action={updateGoldPassAction} buttonLabel="Save Gold Pass" className={cardClasses}>
+        <h2 className={cardHeaderClasses + " mb-3"}>Gold Pass</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
             <label className={labelClasses}>Season name</label>
@@ -117,16 +111,13 @@ export default async function ResourcesPage() {
             />
           </div>
         </div>
-        <div className={dividerClasses + " pt-1"}>
+        <div className={dividerClasses + " pt-1 mt-4"}>
           <div className="grid sm:grid-cols-2 gap-x-6 pt-3">
             <Toggle name="purchased" label="Purchased this season" defaultChecked={goldPass?.purchased} />
             <Toggle name="active" label="Season currently active" defaultChecked={goldPass?.active} />
           </div>
         </div>
-        <button type="submit" className={buttonClasses}>
-          Save Gold Pass
-        </button>
-      </form>
+      </ActionForm>
     </div>
   );
 }

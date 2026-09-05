@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import type { SaveState } from "@/components/action-form";
 
 function num(formData: FormData, key: string): number {
   const parsed = Number(formData.get(key));
@@ -15,9 +16,9 @@ function optionalNum(formData: FormData, key: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export async function addBuildingGroupAction(formData: FormData) {
+export async function addBuildingGroupAction(_prevState: SaveState, formData: FormData): Promise<SaveState> {
   const buildingType = String(formData.get("buildingType") ?? "").trim();
-  if (!buildingType) return;
+  if (!buildingType) return { status: "error", message: "Pick a building type" };
 
   const level = num(formData, "level");
   const count = num(formData, "count");
@@ -30,7 +31,9 @@ export async function addBuildingGroupAction(formData: FormData) {
   });
 
   revalidatePath("/data/buildings");
+  revalidatePath("/");
   revalidatePath("/plan");
+  return { status: "ok", message: "Saved" };
 }
 
 export async function updateBuildingGroupAction(formData: FormData) {

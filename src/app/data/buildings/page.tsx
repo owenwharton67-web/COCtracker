@@ -6,7 +6,6 @@ import {
   cardHeaderClasses,
   inputClasses,
   labelClasses,
-  buttonClasses,
   secondaryButtonClasses,
   dangerLinkClasses,
   badgeClasses,
@@ -15,6 +14,7 @@ import {
   pageHeaderSubtextClasses,
   sectionLabelClasses,
 } from "@/components/ui";
+import { ActionForm } from "@/components/action-form";
 import { addBuildingGroupAction, updateBuildingGroupAction, deleteBuildingGroupAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -56,9 +56,9 @@ export default async function BuildingsPage() {
         </p>
       </div>
 
-      <div className={cardClasses}>
+      <ActionForm action={addBuildingGroupAction} buttonLabel="Save group" className={cardClasses}>
         <h2 className={cardHeaderClasses + " mb-3"}>Add / update a group</h2>
-        <form action={addBuildingGroupAction} className="grid sm:grid-cols-5 gap-4 items-end">
+        <div className="grid sm:grid-cols-4 gap-4">
           <div className="sm:col-span-2">
             <label className={labelClasses}>Building type</label>
             <select name="buildingType" className={inputClasses} required>
@@ -81,13 +81,8 @@ export default async function BuildingsPage() {
             <label className={labelClasses}>Cap level (optional)</label>
             <input type="number" name="capLevel" min={1} className={inputClasses} />
           </div>
-          <div className="sm:col-span-5">
-            <button type="submit" className={buttonClasses}>
-              Save group
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+      </ActionForm>
 
       {buildings.length === 0 ? (
         <div className={cardClasses}>

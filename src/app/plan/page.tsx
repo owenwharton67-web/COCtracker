@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buildUpgradePlan } from "@/lib/optimizer/engine";
+import { estimateTimeToMax } from "@/lib/optimizer/eta";
 import {
   cardClasses,
   cardHeaderClasses,
@@ -11,6 +12,7 @@ import {
   sectionLabelClasses,
 } from "@/components/ui";
 import type { UpgradeCandidate } from "@/lib/optimizer/types";
+import type { TimeToMaxEstimate } from "@/lib/optimizer/eta";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +42,7 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
   const rawTab = Array.isArray(params.tab) ? params.tab[0] : params.tab;
   const activeTab: TabKey = TABS.some((t) => t.key === rawTab) ? (rawTab as TabKey) : "ALL";
 
-  const plan = await buildUpgradePlan();
+  const [plan, eta] = await Promise.all([buildUpgradePlan(), estimateTimeToMax()]);
   const affordableNow = plan.affordableNow.filter((c) => matchesTab(c, activeTab));
   const queuedNext = plan.queuedNext.filter((c) => matchesTab(c, activeTab));
 
@@ -54,6 +56,8 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
           and that item uses your exact number from then on.
         </p>
       </div>
+
+      {eta && eta.overallDays > 0 && <EtaCard eta={eta} />}
 
       <div className="flex flex-wrap gap-3">
         <MiniStat label="Builders free" value={`${plan.summary.buildersFree}/${plan.summary.buildersTotal}`} />
@@ -112,6 +116,49 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
       )}
     </div>
   );
+}
+
+const BOTTLENECK_LABEL: Record<TimeToMaxEstimate["bottleneck"], string> = {
+  BUILDER: "your builders",
+  LAB: "the Laboratory / Pet House queue",
+  HERO: "your slowest hero",
+  NONE: "nothing",
+};
+
+function EtaCard({ eta }: { eta: TimeToMaxEstimate }) {
+  const bottleneckDetail =
+    eta.bottleneck === "HERO" && eta.slowestHero ? ` (${eta.slowestHero})` : "";
+
+  return (
+    <div className={cardClasses + " border-accent/30 bg-linear-to-br from-surface to-accent-soft/40"}>
+      <div className={sectionLabelClasses}>Time to fully max, back-to-back</div>
+      <div className="mt-1 flex items-baseline gap-2 flex-wrap">
+        <span className="text-3xl font-semibold text-text">{formatDays(eta.overallDays)}</span>
+        <span className="text-sm text-muted">
+          bottlenecked by {BOTTLENECK_LABEL[eta.bottleneck]}
+          {bottleneckDetail}
+        </span>
+      </div>
+      <p className="text-xs text-faint mt-2 max-w-xl">
+        This assumes resources are never the limiting factor (we don&apos;t track your income rate) - it&apos;s a
+        best-case floor, not a promised date. If it&apos;s much longer than you expected, that track (builders, Lab,
+        or a hero) is your real constraint, not gold/elixir.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted">
+        <span>Builders: {formatDays(eta.builderDays)}</span>
+        <span>Lab/Pet House: {formatDays(eta.labDays)}</span>
+        <span>Heroes: {formatDays(eta.heroDays)}</span>
+      </div>
+    </div>
+  );
+}
+
+function formatDays(days: number): string {
+  if (days < 1) return `${Math.max(1, Math.round(days * 24))}h`;
+  if (days < 60) return `${Math.round(days)}d`;
+  const months = days / 30;
+  if (months < 24) return `${months.toFixed(1)}mo`;
+  return `${(days / 365).toFixed(1)}yr`;
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
