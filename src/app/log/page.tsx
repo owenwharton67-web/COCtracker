@@ -29,7 +29,8 @@ export default async function UpgradeLogPage() {
         <h1 className={pageHeaderTitleClasses}>Upgrade log</h1>
         <p className={pageHeaderSubtextClasses}>
           Log the real cost/time the game shows you when you queue an upgrade. Any upgrade with a matching logged
-          entry (same item, same level jump) uses this exact number in the plan instead of the built-in estimate.
+          entry (same item, same level jump) uses this exact number in the plan - taking priority over both the
+          verified game-data table and the approximation.
         </p>
       </div>
 
