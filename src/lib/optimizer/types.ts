@@ -1,4 +1,5 @@
 import type { Currency } from "@/data/currency";
+import type { CostSource } from "./cost";
 
 export type Queue = "BUILDER" | "LAB" | "HERO_ALTAR" | "INSTANT";
 
@@ -10,7 +11,7 @@ export interface UpgradeCandidate {
   currency: Currency;
   amount: number;
   minutes: number;
-  costIsExact: boolean; // true if sourced from a logged real UpgradeLog entry
+  costSource: CostSource; // logged (your account) > gamedata (extracted, verified) > estimate (approximation)
   queue: Queue;
   score: number;
   reasons: string[];

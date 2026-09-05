@@ -53,9 +53,12 @@ export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
       <div>
         <h1 className={pageHeaderTitleClasses}>Upgrade plan</h1>
         <p className={pageHeaderSubtextClasses}>
-          Ranked by strategic importance, then cost/time efficiency. Amounts marked <em>approx.</em> are estimates,
-          not Supercell&apos;s real numbers - <Link href="/log" className="text-accent hover:underline">log the real cost</Link> once
-          and that item uses your exact number from then on.
+          Ranked by strategic importance, then cost/time efficiency. Most amounts are marked{" "}
+          <span className="text-ore">verified</span> - extracted from Clash of Clans&apos; own game data, not a
+          guess (see README for the one gap: it may be missing the very newest content). Anything marked{" "}
+          <em>approx.</em> isn&apos;t covered by that data yet -{" "}
+          <Link href="/log" className="text-accent hover:underline">log the real cost</Link> once and that item
+          uses your exact number from then on, permanently.
         </p>
       </div>
 
@@ -216,7 +219,8 @@ function Section({
                     {c.amount.toLocaleString()} {CURRENCY_LABEL[c.currency]}
                   </span>
                   {c.minutes > 0 && <span className="text-xs text-muted">{formatMinutes(c.minutes)}</span>}
-                  {!c.costIsExact && <span className="text-xs text-faint">approx.</span>}
+                  {c.costSource === "estimate" && <span className="text-xs text-faint">approx.</span>}
+                  {c.costSource === "gamedata" && <span className="text-xs text-ore" title="From Clash of Clans' own game data">verified</span>}
                 </div>
               </div>
             </li>

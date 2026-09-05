@@ -52,27 +52,35 @@ those IDs don't change. See `src/lib/game-export.ts`.
 
 ## The upgrade plan's honesty policy
 
-Exact per-level upgrade costs for every troop/spell/hero/building at every
-Town Hall would be thousands of numbers, they drift with balance patches,
-and this app doesn't have a verified, current source for all of them.
-Rather than presenting fabricated numbers as fact, the plan (`/plan`) does
-two things:
+Every upgrade cost/time shown is labeled with exactly how sure this app is
+about it (`src/lib/optimizer/cost.ts`), in order of trust:
 
-1. **Currency and relative priority are real, tracked knowledge** - which
-   resource type an item costs, and whether heroes/resource buildings/lab
-   research matter more than walls, is stable game design, not a number
-   that drifts (`src/data/currency.ts`, `src/data/building-catalog.ts`).
-2. **Exact costs come from your own logged history.** The Upgrade Log
-   (`/log`) lets you record the real cost/time the game showed you for a
-   specific level jump. Once logged, that exact number is used for that
-   item from then on (`src/lib/optimizer/cost.ts`). Until you've logged an
-   item, the plan uses a generic smooth cost curve
-   (`src/data/cost-model.ts`) clearly marked "approx." - good enough to
-   rank "is this currently cheap and fast relative to my other options,"
-   not to reserve exact resources against.
+1. **Your own logged history** (no badge shown, treated as ground truth).
+   The Upgrade Log (`/log`) lets you record the real cost/time the game
+   showed you for a specific level jump. Once logged, that exact number is
+   used for that item from then on.
+2. **"verified"** - `src/data/real-costs/` is extracted directly from
+   Clash of Clans' own game-data files (the CSVs shipped inside the game
+   client - not scraped from a wiki, not guessed), covering most heroes,
+   pets, troops, spells, buildings, and traps. It's a real number, just not
+   confirmed against your specific account. **Known gap**: this is a
+   snapshot of the game files at some point in time, not a live feed - at
+   minimum it's missing the Minion Prince hero and several newer pets, and
+   may miss other very recent content or levels added since. If you
+   regenerate this data from a newer game-files dump, replace the JSON in
+   `src/data/real-costs/` - the loader needs no other changes.
+3. **"approx."** - `src/data/cost-model.ts`'s smooth synthetic curve, used
+   only when neither of the above has this item/level. Good enough to rank
+   "is this currently cheap and fast relative to my other options," not to
+   reserve exact resources against.
+
+Currency and relative priority (which resource type an item costs, whether
+heroes/resource buildings/lab research matter more than walls) are tracked
+separately as stable game design, not something that drifts the way exact
+numbers do (`src/data/currency.ts`, `src/data/building-catalog.ts`).
 
 The more you use `/log`, the more of the plan becomes exact instead of
-approximate.
+verified-but-unconfirmed or approximate.
 
 ## Stack
 

@@ -1,12 +1,15 @@
 import { prisma } from "@/lib/db";
 import { estimateUpgrade } from "@/data/cost-model";
+import { lookupRealCost } from "@/data/real-costs";
 import type { Currency } from "@/data/currency";
+
+export type CostSource = "logged" | "gamedata" | "estimate";
 
 export interface ResolvedCost {
   currency: Currency;
   amount: number;
   minutes: number;
-  exact: boolean;
+  source: CostSource;
 }
 
 function logToCurrency(log: {
@@ -22,10 +25,13 @@ function logToCurrency(log: {
   return null;
 }
 
-// Prefers a real, user-logged cost (see UpgradeLog / the /log page) for the
-// exact fromLevel -> fromLevel+1 jump; falls back to the approximate curve
-// in src/data/cost-model.ts otherwise. See that file for why the fallback
-// exists and what it is and isn't good for.
+// Three tiers, in order of trust:
+// 1. "logged" - you told us the exact number the game showed you (/log).
+// 2. "gamedata" - extracted from Clash of Clans' own game files (see
+//    src/data/real-costs) - not your account-specific confirmation, but a
+//    real, current-as-of-that-snapshot number, not a guess.
+// 3. "estimate" - the smooth approximation curve (src/data/cost-model.ts),
+//    used only when neither of the above has this item/level.
 export async function resolveUpgradeCost(
   itemType: string,
   itemName: string,
@@ -45,11 +51,16 @@ export async function resolveUpgradeCost(
         currency: resolved.currency,
         amount: resolved.amount,
         minutes: logged.durationMinutes ?? 0,
-        exact: true,
+        source: "logged",
       };
     }
   }
 
+  const real = lookupRealCost(itemType, itemName, fromLevel, toLevel);
+  if (real) {
+    return { currency: real.currency, amount: real.amount, minutes: real.minutes, source: "gamedata" };
+  }
+
   const estimate = estimateUpgrade(itemType, currency, fromLevel, toLevel);
-  return { currency: estimate.currency, amount: estimate.amount, minutes: estimate.minutes, exact: false };
+  return { currency: estimate.currency, amount: estimate.amount, minutes: estimate.minutes, source: "estimate" };
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { resolveUpgradeCost } from "./cost";
+import { resolveUpgradeCost, type CostSource } from "./cost";
 import { scoreCandidate, weightFor } from "./heuristic";
 import {
   heroCurrency,
@@ -86,10 +86,10 @@ export async function buildUpgradePlan(): Promise<UpgradePlan> {
       currency: cost.currency,
       amount: cost.amount,
       minutes: cost.minutes,
-      costIsExact: cost.exact,
+      costSource: cost.source,
       queue: queueFor(unit.category),
       score: scoreCandidate(weight, cost.amount, cost.minutes),
-      reasons: buildReasons(unit.category, unit.level, unit.maxLevel, cost.exact),
+      reasons: buildReasons(unit.category, unit.level, unit.maxLevel, cost.source),
     });
   }
 
@@ -112,10 +112,10 @@ export async function buildUpgradePlan(): Promise<UpgradePlan> {
       currency: cost.currency,
       amount: cost.amount,
       minutes: cost.minutes,
-      costIsExact: cost.exact,
+      costSource: cost.source,
       queue: queueFor(itemType),
       score: scoreCandidate(weight, cost.amount, cost.minutes),
-      reasons: buildReasons(itemType, building.level, building.capLevel!, cost.exact),
+      reasons: buildReasons(itemType, building.level, building.capLevel!, cost.source),
     });
   }
 
@@ -151,7 +151,7 @@ export async function buildUpgradePlan(): Promise<UpgradePlan> {
     currency: buildingCurrency(b.buildingType),
     amount: 0,
     minutes: 0,
-    costIsExact: false,
+    costSource: "estimate",
     queue: "BUILDER",
     score: 0,
     reasons: ["Set this building's cap level (shown in-game as \"Lvl X/Y\") to include it in the plan."],
@@ -171,11 +171,17 @@ export async function buildUpgradePlan(): Promise<UpgradePlan> {
   };
 }
 
-function buildReasons(itemType: string, level: number, cap: number, exact: boolean): string[] {
+function buildReasons(itemType: string, level: number, cap: number, source: CostSource): string[] {
   const reasons: string[] = [];
   const remaining = cap - level;
   reasons.push(`${remaining} level${remaining === 1 ? "" : "s"} below cap`);
-  reasons.push(exact ? "cost from your logged upgrade history" : "cost is an approximation - log the real value at /log");
+  reasons.push(
+    source === "logged"
+      ? "cost from your logged upgrade history"
+      : source === "gamedata"
+        ? "cost from Clash of Clans' own game data"
+        : "cost is an approximation - log the real value at /log",
+  );
   if (itemType === "HERO_EQUIPMENT") reasons.push("instant - no builder or time needed");
   if (itemType === "HERO") reasons.push("upgrades independently, doesn't use a builder");
   return reasons;

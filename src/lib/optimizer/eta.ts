@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { estimateUpgrade } from "@/data/cost-model";
+import { lookupRealCost } from "@/data/real-costs";
 
 export interface TimeToMaxEstimate {
   builderDays: number;
@@ -40,6 +41,8 @@ export async function estimateTimeToMax(): Promise<TimeToMaxEstimate | null> {
     const key = `${itemType}|${itemName}|${fromLevel}|${toLevel}`;
     const loggedMinutes = logged.get(key);
     if (loggedMinutes != null) return loggedMinutes;
+    const real = lookupRealCost(itemType, itemName, fromLevel, toLevel);
+    if (real) return real.minutes;
     // estimateUpgrade only needs currency for its return shape, not the
     // minutes math, so any placeholder currency is fine here.
     return estimateUpgrade(itemType, "GOLD", fromLevel, toLevel).minutes;
