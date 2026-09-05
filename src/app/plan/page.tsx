@@ -1,5 +1,15 @@
+import Link from "next/link";
 import { buildUpgradePlan } from "@/lib/optimizer/engine";
-import { cardClasses } from "@/components/ui";
+import {
+  cardClasses,
+  cardHeaderClasses,
+  currencyBadgeClasses,
+  badgeClasses,
+  emptyStateClasses,
+  pageHeaderTitleClasses,
+  pageHeaderSubtextClasses,
+  sectionLabelClasses,
+} from "@/components/ui";
 import type { UpgradeCandidate } from "@/lib/optimizer/types";
 
 export const dynamic = "force-dynamic";
@@ -16,18 +26,20 @@ export default async function PlanPage() {
 
   return (
     <div className="space-y-6">
-      <div className={cardClasses}>
-        <h1 className="text-lg font-semibold mb-2">Upgrade plan</h1>
-        <p className="text-sm text-black/70 dark:text-white/70">
-          Ranked by strategic weight, then by cost/time efficiency (see <code>src/lib/optimizer/heuristic.ts</code>).
-          Costs marked <em>approx.</em> come from a generic curve, not Supercell&apos;s real numbers (see the
-          disclaimer in <code>src/data/cost-model.ts</code>) - log the real value at <a href="/log" className="underline">/log</a> once
-          and it becomes exact from then on.
+      <div>
+        <h1 className={pageHeaderTitleClasses}>Upgrade plan</h1>
+        <p className={pageHeaderSubtextClasses}>
+          Ranked by strategic importance, then cost/time efficiency. Amounts marked <em>approx.</em> are estimates,
+          not Supercell&apos;s real numbers - <Link href="/log" className="text-accent hover:underline">log the real cost</Link> once
+          and that item uses your exact number from then on.
         </p>
-        <div className="mt-3 text-xs text-black/50 dark:text-white/50">
-          {plan.summary.buildersFree}/{plan.summary.buildersTotal} builders free · Lab {plan.summary.labFree ? "free" : "busy"} ·{" "}
-          {plan.summary.totalPendingUnits} units and {plan.summary.totalPendingBuildings} building groups below cap
-        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <MiniStat label="Builders free" value={`${plan.summary.buildersFree}/${plan.summary.buildersTotal}`} />
+        <MiniStat label="Lab" value={plan.summary.labFree ? "Free" : "Busy"} />
+        <MiniStat label="Units below cap" value={String(plan.summary.totalPendingUnits)} />
+        <MiniStat label="Buildings below cap" value={String(plan.summary.totalPendingBuildings)} />
       </div>
 
       <Section
@@ -35,6 +47,7 @@ export default async function PlanPage() {
         description="Affordable with what you have on hand, and a builder/lab/altar slot is free."
         candidates={plan.affordableNow}
         emptyMessage="Nothing is both affordable and has a free slot right now - check Resources & items, or see Queued next below."
+        tone="accent"
       />
 
       <Section
@@ -46,16 +59,16 @@ export default async function PlanPage() {
 
       {plan.blockedOnData.length > 0 && (
         <div className={cardClasses}>
-          <h2 className="font-medium mb-2">Missing cap level</h2>
-          <p className="text-sm text-black/60 dark:text-white/60 mb-3">
+          <h2 className={cardHeaderClasses}>Missing cap level</h2>
+          <p className="text-sm text-muted mb-3">
             These building groups don&apos;t have a cap level set, so it&apos;s unknown whether they&apos;re
             already maxed for your Town Hall. Set it on the{" "}
-            <a href="/data/buildings" className="underline">
+            <Link href="/data/buildings" className="text-accent hover:underline">
               Buildings
-            </a>{" "}
+            </Link>{" "}
             page.
           </p>
-          <ul className="text-sm space-y-1">
+          <ul className="text-sm space-y-1 text-muted">
             {plan.blockedOnData.map((c, i) => (
               <li key={i}>{c.itemName}</li>
             ))}
@@ -66,38 +79,57 @@ export default async function PlanPage() {
   );
 }
 
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+      <span className="text-faint">{label}</span> <span className="text-text font-medium">{value}</span>
+    </div>
+  );
+}
+
 function Section({
   title,
   description,
   candidates,
   emptyMessage,
+  tone,
 }: {
   title: string;
   description: string;
   candidates: UpgradeCandidate[];
   emptyMessage: string;
+  tone?: "accent";
 }) {
   return (
-    <div className={cardClasses}>
-      <h2 className="font-medium">{title}</h2>
-      <p className="text-sm text-black/60 dark:text-white/60 mb-3">{description}</p>
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <h2 className={sectionLabelClasses}>{title}</h2>
+        {tone === "accent" && candidates.length > 0 && <span className={badgeClasses("accent")}>{candidates.length}</span>}
+      </div>
+      <p className="text-sm text-muted mb-3">{description}</p>
       {candidates.length === 0 ? (
-        <p className="text-sm text-black/50 dark:text-white/50">{emptyMessage}</p>
+        <div className={cardClasses}>
+          <p className={emptyStateClasses}>{emptyMessage}</p>
+        </div>
       ) : (
         <ol className="space-y-2">
           {candidates.map((c, i) => (
-            <li key={i} className="border-t border-black/10 dark:border-white/10 pt-2 first:border-t-0 first:pt-0">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
-                <span className="font-medium">
-                  {c.itemName} <span className="text-black/50 dark:text-white/50">Lv{c.fromLevel}→{c.toLevel}</span>
-                </span>
-                <span className="text-black/70 dark:text-white/70">
-                  {c.amount.toLocaleString()} {CURRENCY_LABEL[c.currency]}
-                  {c.minutes > 0 ? ` · ${formatMinutes(c.minutes)}` : ""}
-                  {!c.costIsExact && <span className="text-black/40 dark:text-white/40"> (approx.)</span>}
-                </span>
+            <li key={i} className={cardClasses + " !p-4"}>
+              <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                <div>
+                  <div className="text-sm font-medium text-text">
+                    {c.itemName} <span className="text-faint font-normal">Lv{c.fromLevel}&rarr;{c.toLevel}</span>
+                  </div>
+                  <div className="text-xs text-faint mt-0.5">{c.reasons.join(" · ")}</div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={currencyBadgeClasses[c.currency] ? `${currencyBadgeClasses[c.currency]} rounded-full px-2.5 py-1 text-xs font-medium` : badgeClasses()}>
+                    {c.amount.toLocaleString()} {CURRENCY_LABEL[c.currency]}
+                  </span>
+                  {c.minutes > 0 && <span className="text-xs text-muted">{formatMinutes(c.minutes)}</span>}
+                  {!c.costIsExact && <span className="text-xs text-faint">approx.</span>}
+                </div>
               </div>
-              <div className="text-xs text-black/50 dark:text-white/50">{c.reasons.join(" · ")}</div>
             </li>
           ))}
         </ol>

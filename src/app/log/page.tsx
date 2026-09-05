@@ -1,6 +1,16 @@
 import { prisma } from "@/lib/db";
 import { MAGIC_ITEMS } from "@/data/magic-items";
-import { cardClasses, inputClasses, labelClasses, buttonClasses } from "@/components/ui";
+import {
+  cardClasses,
+  cardHeaderClasses,
+  inputClasses,
+  labelClasses,
+  buttonClasses,
+  dangerLinkClasses,
+  emptyStateClasses,
+  pageHeaderTitleClasses,
+  pageHeaderSubtextClasses,
+} from "@/components/ui";
 import { addUpgradeLogAction, deleteUpgradeLogAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +25,13 @@ export default async function UpgradeLogPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-black/60 dark:text-white/60">
-        Log the real cost/time the game shows you when you queue an upgrade. Any upgrade with a matching logged
-        entry (same item, same level jump) uses this exact number in the plan instead of the built-in estimate -
-        see the note on the Upgrade plan page for why that estimate exists at all.
-      </p>
+      <div>
+        <h1 className={pageHeaderTitleClasses}>Upgrade log</h1>
+        <p className={pageHeaderSubtextClasses}>
+          Log the real cost/time the game shows you when you queue an upgrade. Any upgrade with a matching logged
+          entry (same item, same level jump) uses this exact number in the plan instead of the built-in estimate.
+        </p>
+      </div>
 
       <form action={addUpgradeLogAction} className={cardClasses + " grid sm:grid-cols-4 gap-4 items-end"}>
         <div>
@@ -97,28 +109,31 @@ export default async function UpgradeLogPage() {
       </form>
 
       <div className={cardClasses}>
-        <h2 className="font-medium mb-3">Recent entries</h2>
+        <h2 className={cardHeaderClasses + " mb-3"}>Recent entries</h2>
         {entries.length === 0 ? (
-          <p className="text-sm text-black/50 dark:text-white/50">Nothing logged yet.</p>
+          <p className={emptyStateClasses}>Nothing logged yet.</p>
         ) : (
-          <ul className="divide-y divide-black/10 dark:divide-white/10 text-sm">
+          <ul className="divide-y divide-border text-sm">
             {entries.map((entry) => (
-              <li key={entry.id} className="py-2 flex items-center justify-between gap-4">
-                <span>
-                  <span className="font-medium">{entry.itemName}</span> Lv{entry.fromLevel}→{entry.toLevel} ·{" "}
-                  {[
-                    entry.goldCost != null ? `${entry.goldCost.toLocaleString()} gold` : null,
-                    entry.elixirCost != null ? `${entry.elixirCost.toLocaleString()} elixir` : null,
-                    entry.darkElixirCost != null ? `${entry.darkElixirCost.toLocaleString()} DE` : null,
-                    entry.oreCost != null ? `${entry.oreCost.toLocaleString()} ${entry.oreType ?? ""} ore` : null,
-                    entry.durationMinutes != null ? `${entry.durationMinutes}m` : null,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
+              <li key={entry.id} className="py-2.5 flex items-center justify-between gap-4">
+                <span className="text-text">
+                  <span className="font-medium">{entry.itemName}</span>{" "}
+                  <span className="text-faint">
+                    Lv{entry.fromLevel}&rarr;{entry.toLevel} ·{" "}
+                    {[
+                      entry.goldCost != null ? `${entry.goldCost.toLocaleString()} gold` : null,
+                      entry.elixirCost != null ? `${entry.elixirCost.toLocaleString()} elixir` : null,
+                      entry.darkElixirCost != null ? `${entry.darkElixirCost.toLocaleString()} DE` : null,
+                      entry.oreCost != null ? `${entry.oreCost.toLocaleString()} ${entry.oreType ?? ""} ore` : null,
+                      entry.durationMinutes != null ? `${entry.durationMinutes}m` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
                 </span>
                 <form action={deleteUpgradeLogAction}>
                   <input type="hidden" name="id" value={entry.id} />
-                  <button type="submit" className="text-xs text-red-600 dark:text-red-400 underline">
+                  <button type="submit" className={dangerLinkClasses}>
                     Delete
                   </button>
                 </form>

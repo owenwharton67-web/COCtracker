@@ -1,6 +1,16 @@
 import { prisma } from "@/lib/db";
 import { MAGIC_ITEMS } from "@/data/magic-items";
-import { cardClasses, inputClasses, labelClasses, buttonClasses } from "@/components/ui";
+import {
+  cardClasses,
+  cardHeaderClasses,
+  inputClasses,
+  labelClasses,
+  buttonClasses,
+  pageHeaderTitleClasses,
+  pageHeaderSubtextClasses,
+  dividerClasses,
+} from "@/components/ui";
+import { Toggle } from "@/components/toggle";
 import { updateResourcesAction, updateMagicItemsAction, updateGoldPassAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -21,13 +31,20 @@ export default async function ResourcesPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-black/60 dark:text-white/60">
-        None of this is exposed by the Clash of Clans API - it has to be entered by hand. Update it whenever it
-        drifts noticeably from reality; the upgrade plan uses whatever is here.
-      </p>
+      <div>
+        <h1 className={pageHeaderTitleClasses}>Resources & items</h1>
+        <p className={pageHeaderSubtextClasses}>
+          None of this is visible to the Clash of Clans API - it&apos;s entered by hand. Update it whenever it
+          drifts noticeably from reality; the upgrade plan reads whatever is here. Prefer bulk edits? Use{" "}
+          <a href="/data/import" className="text-accent hover:underline">
+            Import / export
+          </a>{" "}
+          instead.
+        </p>
+      </div>
 
       <form action={updateResourcesAction} className={cardClasses + " space-y-4"}>
-        <h2 className="font-medium">Resources on hand</h2>
+        <h2 className={cardHeaderClasses}>Resources on hand</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <Field label="Gold" name="gold" defaultValue={resources?.gold} />
           <Field label="Elixir" name="elixir" defaultValue={resources?.elixir} />
@@ -37,17 +54,22 @@ export default async function ResourcesPage() {
           <Field label="Starry Ore" name="starryOre" defaultValue={resources?.starryOre} />
           <Field label="Gems" name="gems" defaultValue={resources?.gems} />
           <Field label="Builders free" name="buildersAvailable" defaultValue={resources?.buildersAvailable ?? 5} />
-          <Field label="Builders total (huts owned)" name="builderTotalCount" defaultValue={resources?.builderTotalCount ?? 5} />
+          <Field
+            label="Builders total (huts owned)"
+            name="builderTotalCount"
+            defaultValue={resources?.builderTotalCount ?? 5}
+          />
         </div>
-        <div className="flex gap-6 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="labBusy" defaultChecked={resources?.labBusy} />
-            Laboratory currently researching something
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="petHouseBusy" defaultChecked={resources?.petHouseBusy} />
-            Pet House currently upgrading a pet
-          </label>
+        <div className={dividerClasses + " pt-1"}>
+          <div className="grid sm:grid-cols-2 gap-x-6 pt-3">
+            <Toggle name="labBusy" label="Laboratory busy" description="Currently researching something" defaultChecked={resources?.labBusy} />
+            <Toggle
+              name="petHouseBusy"
+              label="Pet House busy"
+              description="Currently upgrading a pet"
+              defaultChecked={resources?.petHouseBusy}
+            />
+          </div>
         </div>
         <button type="submit" className={buttonClasses}>
           Save resources
@@ -55,7 +77,7 @@ export default async function ResourcesPage() {
       </form>
 
       <form action={updateMagicItemsAction} className={cardClasses + " space-y-4"}>
-        <h2 className="font-medium">Magic item inventory</h2>
+        <h2 className={cardHeaderClasses}>Magic item inventory</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {MAGIC_ITEMS.map((item) => (
             <div key={item.key}>
@@ -78,7 +100,7 @@ export default async function ResourcesPage() {
       </form>
 
       <form action={updateGoldPassAction} className={cardClasses + " space-y-4"}>
-        <h2 className="font-medium">Gold Pass</h2>
+        <h2 className={cardHeaderClasses}>Gold Pass</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
             <label className={labelClasses}>Season name</label>
@@ -95,15 +117,11 @@ export default async function ResourcesPage() {
             />
           </div>
         </div>
-        <div className="flex gap-6 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="purchased" defaultChecked={goldPass?.purchased} />
-            Gold Pass purchased this season
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="active" defaultChecked={goldPass?.active} />
-            Season currently active
-          </label>
+        <div className={dividerClasses + " pt-1"}>
+          <div className="grid sm:grid-cols-2 gap-x-6 pt-3">
+            <Toggle name="purchased" label="Purchased this season" defaultChecked={goldPass?.purchased} />
+            <Toggle name="active" label="Season currently active" defaultChecked={goldPass?.active} />
+          </div>
         </div>
         <button type="submit" className={buttonClasses}>
           Save Gold Pass
