@@ -2,13 +2,13 @@ import { prisma } from "@/lib/db";
 import {
   cardClasses,
   cardHeaderClasses,
-  buttonClasses,
   badgeClasses,
   emptyStateClasses,
   pageHeaderTitleClasses,
   pageHeaderSubtextClasses,
 } from "@/components/ui";
-import { triggerSyncAction } from "./actions";
+import { relativeTime } from "@/lib/format-time";
+import { SyncButton } from "./sync-button";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +36,7 @@ export default async function SyncStatusPage() {
             COC_PLAYER_TAG and/or COC_API_TOKEN aren&apos;t set yet - a sync will fail until they are.
           </p>
         )}
-        <form action={triggerSyncAction}>
-          <button type="submit" className={buttonClasses}>
-            Sync now
-          </button>
-        </form>
+        <SyncButton />
       </div>
 
       <div className={cardClasses}>
@@ -57,7 +53,9 @@ export default async function SyncStatusPage() {
                   </span>
                   <span className="text-muted">{log.message}</span>
                 </div>
-                <span className="shrink-0 text-faint">{new Date(log.ranAt).toLocaleString()}</span>
+                <span className="shrink-0 text-faint" title={new Date(log.ranAt).toLocaleString()}>
+                  {relativeTime(log.ranAt)}
+                </span>
               </li>
             ))}
           </ul>

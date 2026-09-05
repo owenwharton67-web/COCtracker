@@ -21,8 +21,28 @@ const CURRENCY_LABEL: Record<string, string> = {
   ORE: "Ore",
 };
 
-export default async function PlanPage() {
+type TabKey = "ALL" | "HEROES" | "ARMY" | "BUILDINGS";
+
+const TABS: { key: TabKey; label: string; types: string[] | null }[] = [
+  { key: "ALL", label: "All", types: null },
+  { key: "HEROES", label: "Heroes & equipment", types: ["HERO", "HERO_EQUIPMENT"] },
+  { key: "ARMY", label: "Troops, spells & pets", types: ["TROOP", "SIEGE_MACHINE", "SPELL", "PET"] },
+  { key: "BUILDINGS", label: "Buildings & walls", types: ["BUILDING", "WALL"] },
+];
+
+function matchesTab(candidate: UpgradeCandidate, tab: TabKey): boolean {
+  const types = TABS.find((t) => t.key === tab)?.types;
+  return !types || types.includes(candidate.itemType);
+}
+
+export default async function PlanPage({ searchParams }: PageProps<"/plan">) {
+  const params = await searchParams;
+  const rawTab = Array.isArray(params.tab) ? params.tab[0] : params.tab;
+  const activeTab: TabKey = TABS.some((t) => t.key === rawTab) ? (rawTab as TabKey) : "ALL";
+
   const plan = await buildUpgradePlan();
+  const affordableNow = plan.affordableNow.filter((c) => matchesTab(c, activeTab));
+  const queuedNext = plan.queuedNext.filter((c) => matchesTab(c, activeTab));
 
   return (
     <div className="space-y-6">
@@ -42,22 +62,37 @@ export default async function PlanPage() {
         <MiniStat label="Buildings below cap" value={String(plan.summary.totalPendingBuildings)} />
       </div>
 
+      <div className="flex flex-wrap gap-1.5 border-b border-border pb-3">
+        {TABS.map((tab) => (
+          <Link
+            key={tab.key}
+            href={tab.key === "ALL" ? "/plan" : `/plan?tab=${tab.key}`}
+            className={
+              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors " +
+              (activeTab === tab.key ? "bg-accent text-on-accent" : "text-muted hover:text-text hover:bg-surface-hover")
+            }
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </div>
+
       <Section
         title="Do now"
         description="Affordable with what you have on hand, and a builder/lab/altar slot is free."
-        candidates={plan.affordableNow}
-        emptyMessage="Nothing is both affordable and has a free slot right now - check Resources & items, or see Queued next below."
+        candidates={affordableNow}
+        emptyMessage="Nothing here is both affordable and has a free slot right now."
         tone="accent"
       />
 
       <Section
         title="Queued next"
         description="Ranked and ready, but blocked on resources on hand or a busy slot."
-        candidates={plan.queuedNext}
-        emptyMessage="Nothing queued."
+        candidates={queuedNext}
+        emptyMessage="Nothing queued in this category."
       />
 
-      {plan.blockedOnData.length > 0 && (
+      {activeTab === "ALL" && plan.blockedOnData.length > 0 && (
         <div className={cardClasses}>
           <h2 className={cardHeaderClasses}>Missing cap level</h2>
           <p className="text-sm text-muted mb-3">
